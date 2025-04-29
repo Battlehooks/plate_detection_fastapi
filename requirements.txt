@@ -4,3 +4,5 @@ python-multipart
 ultralytics
 numpy
 pillow
+easyocr>=1.7.0
+opencv-python

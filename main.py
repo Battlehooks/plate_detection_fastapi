@@ -4,6 +4,9 @@ from ultralytics import YOLO
 import os
 import asyncio
 import tempfile
+import easyocr
+import cv2
+import re
 app = FastAPI()
 model = None  # Will be loaded during startup
 
@@ -24,10 +27,11 @@ VEHICLE_CLASS_MAP = {
 @app.on_event("startup")
 async def startup_event():
     # Load the model once at startup
-    global model, model_plate, CLASS_NAMES
+    global model, model_plate, reader, CLASS_NAMES
     model = YOLO("model/yolov8n.onnx")
     model_plate = YOLO("model/plate_model.onnx")
     CLASS_NAMES = model.names
+    reader = easyocr.Reader(['en'])
 @app.on_event("shutdown")
 async def shutdown_event():
     # Optionally, unload the model or perform other cleanup tasks
@@ -73,13 +77,27 @@ async def predict(file: UploadFile = File(...)):
                     "coordinates": box.xyxy.tolist()
                 })
         
+        plate_text = None
+
+        img = cv2.imread(temp_file_path)
+        coords = plate_predictions[0]["coordinates"][0]
+        x1, y1, x2, y2 = map(int, coords)
+        cropped_plate = img[y1:y2, x1:x2]
+
+        ocr_result = reader.readtext(cropped_plate, detail=0)
+        if ocr_result:
+            plate_text = ocr_result[0]
+            plate_text = re.sub(r'[^A-Za-z0-9\s]+', '', plate_text)
+        
         print({
             "vehicle_predictions": vehicle_predictions,
-            "plate_predictions": plate_predictions
+            "plate_predictions": plate_predictions,
+            "plate_text": plate_text
         })
         return JSONResponse(content={
             "vehicle_predictions": vehicle_predictions,
-            "plate_predictions": plate_predictions
+            "plate_predictions": plate_predictions,
+            "plate_text": plate_text
         })
     finally:
         # Ensure the temporary file is removed even if an error occurs
