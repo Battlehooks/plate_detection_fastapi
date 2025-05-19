@@ -1,8 +1,16 @@
-fastapi
-uvicorn
-python-multipart
-ultralytics
-numpy
-pillow
-easyocr>=1.7.0
-opencv-python
+# --- pasang Torch CPU dulu supaya Ultralytics tidak menarik wheel GPU ---
+torch==2.2.2+cpu
+torchvision==0.17.2+cpu
+--extra-index-url https://download.pytorch.org/whl/cpu
+# -----------------------------------------------------------------------
+
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.20
+
+ultralytics==8.3.139         # perlu untuk YOLO()
+onnxruntime==1.17.3          # backend eksekusi ONNX
+numpy>=1.26
+pillow>=11.2
+opencv-python-headless==4.10.0.82
+easyocr==1.7.2               # OCR; wheel Torch CPU di atas sudah memenuhi
