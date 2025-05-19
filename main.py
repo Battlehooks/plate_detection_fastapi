@@ -92,13 +92,20 @@ async def predict(file: UploadFile = File(...)):
         print({
             "vehicle_predictions": vehicle_predictions,
             "plate_predictions": plate_predictions,
-            "plate_text": plate_text
+            "plate_text": ""
         })
         return JSONResponse(content={
             "vehicle_predictions": vehicle_predictions,
             "plate_predictions": plate_predictions,
             "plate_text": plate_text
         })
+    except Exception as e:
+        print(f"Error processing file: {e}")
+        return JSONResponse(content={
+            "vehicle_predictions": "",
+            "plate_predictions": "",
+            "plate_text": ""
+        }, status_code=500)
     finally:
         # Ensure the temporary file is removed even if an error occurs
         if temp_file_path and os.path.exists(temp_file_path):
